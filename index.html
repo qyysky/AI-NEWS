@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI资讯速递</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background-color: #f8f9fa;
+      color: #333;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    #newsList {
+      list-style: none;
+      margin-top: 10px;
+    }
+    #newsList li {
+      background: white;
+      margin-bottom: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-left: 4px solid #667eea;
+    }
+    #newsList a {
+      color: #0066cc;
+      text-decoration: none;
+      display: block;
+    }
+    #newsList a:hover {
+      text-decoration: underline;
+    }
+    #newsList small {
+      display: block;
+      margin-top: 6px;
+      color: #666;
+      font-size: 0.85rem;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #5a6fd8;
+    }
+    .loading {
+      text-align: center;
+      color: #999;
+      padding: 20px;
+    }
+    .error {
+      color: #d32f2f;
+      text-align: center;
+      padding: 15px;
+      background: #ffebee;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #888;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🤖 AI资讯速递</h1>
+    <p class="subtitle">每日精选中国AI与科技新闻，免费无广告</p>
+  </header>
+
+  <ul id="newsList">
+    <li class="loading">加载中，请稍候…</li>
+  </ul>
+
+  <button id="refreshBtn">🔄 手动刷新</button>
+
+  <footer>
+    由 GitHub Pages 驱动 · 每日自动更新 · 无追踪 · 无广告
+  </footer>
+
+  <script>
+    // 🔐 替换为你从 https://newsapi.org 获取的 API Key
+    const API_KEY = '5eabadfaedc546159c1c9778fe9463ad'; //👈 这里填你的密钥！
+
+    const newsList = document.getElementById('newsList');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    async function fetchNews() {
+      newsList.innerHTML = '<li class="loading">加载中，请稍候…</li>';
+
+      try {
+        const response = await fetch(
+          `https://newsapi.org/v2/top-headlines?country=cn&category=technology&pageSize=10&apiKey=${API_KEY}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`API 请求失败: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.articles || data.articles.length === 0) {
+          newsList.innerHTML = '<li style="color: #999;">暂无新闻，请稍后再试。</li>';
+          return;
+        }
+
+        newsList.innerHTML = '';
+        data.articles.forEach(article => {
+          const li = document.createElement('li');
+          const pubDate = new Date(article.publishedAt).toLocaleString('zh-CN');
+          const source = article.source?.name || '未知来源';
+
+          li.innerHTML = `
+            <a href="${article.url}" target="_blank" style="color: #0066cc; text-decoration: none;">
+              <strong>${article.title || '无标题'}</strong><br>
+              <small style="color: #666;">${pubDate} • ${source}</small>
+            </a>
+          `;
+          newsList.appendChild(li);
+        });
+
+      } catch (err) {
+        console.error('新闻加载失败:', err);
+        newsList.innerHTML = `
+          <li class="error">
+            🔴 加载失败：<br>
+            ${err.message}<br><br>
+            ✅ 请检查 API Key 是否正确，或稍后重试。
+          </li>
+        `;
+      }
+    }
+
+    // 页面加载时自动获取新闻
+    fetchNews();
+
+    // 手动刷新按钮
+    refreshBtn.addEventListener('click', fetchNews);
+
+    // 每24小时自动刷新（可选，减少API调用）
+    setInterval(fetchNews, 24 * 60 * 60 * 1000);
+
+    // 👇 可选：添加到主屏幕提示（仅iOS Safari）
+    if ('standalone' in window.navigator && window.navigator.standalone) {
+      document.body.style.paddingBottom = '60px'; // 避免底部被遮挡
+    }
+  </script>
+</body>
+</html>
